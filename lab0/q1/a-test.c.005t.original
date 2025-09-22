@@ -1,0 +1,49 @@
+
+;; Function fibonacci (null)
+;; enabled by -tree-original
+
+
+{
+  int a = 0;
+  int b = 1;
+  int c;
+
+  if (n <= 1)
+    {
+      return n;
+    }
+    int a = 0;
+    int b = 1;
+    int c;
+  {
+    int i = 2;
+
+        int i = 2;
+    goto <D.2354>;
+    <D.2353>:;
+    c = a + b;
+    a = b;
+    b = c;
+    i++ ;
+    <D.2354>:;
+    if (i <= n) goto <D.2353>; else goto <D.2351>;
+    <D.2351>:;
+  }
+  return b;
+}
+
+
+;; Function main (null)
+;; enabled by -tree-original
+
+
+{
+  int n = 10;
+
+    int n = 10;
+  printf ((const char * restrict) "The %dth Fibonacci number is: %d\n", n, fibonacci (n));
+  printf ((const char * restrict) "SQUARE(%d) = %d\n", n, n * n);
+  return 0;
+}
+return 0;
+
