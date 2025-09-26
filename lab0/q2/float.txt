@@ -1,0 +1,100 @@
+	# === 汇编文件头部信息 ===
+.file	"float.c"					# 指定源文件名为 "float.c"
+	.option nopic					# 编译选项：不生成位置无关代码
+	.attribute arch, "rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zca1p0_zcd1p0"	# 指定 RISC-V 架构扩展
+	.attribute unaligned_access, 0			# 不允许非对齐内存访问
+	.attribute stack_align, 16			# 栈按 16 字节对齐
+	.text						# 切换到代码段
+	.text						# 再次确认切换到代码段
+	.align	1					# 代码按 2^1 = 2 字节对齐
+	.globl	main					# 声明 main 为全局符号
+	.type	main, @function				# 声明 main 是一个函数
+
+# === main 函数开始 ===  
+main:
+	# --- 函数序言 (Prologue) ---
+	addi	sp,sp,-48				# 在栈上分配 48 字节的栈帧空间
+	sd	ra,40(sp)				# 保存返回地址寄存器 ra 到栈偏移 40 处
+	sd	s0,32(sp)				# 保存帧指针寄存器 s0 到栈偏移 32 处
+	addi	s0,sp,48				# 设置新的帧指针 s0 = sp + 48
+
+	# --- float f1 = 3.14; ---
+	lui	a5,%hi(.LC0)				# 加载 .LC0 地址的高 20 位到 a5
+	flw	fa5,%lo(.LC0)(a5)			# 从 .LC0 加载单精度浮点数 3.14 到 fa5
+	fsw	fa5,-20(s0)				# 将 fa5 (3.14) 存储到栈位置 s0-20 (局部变量 f1)
+
+	# --- float f2 = 2.0; ---
+	lui	a5,%hi(.LC1)				# 加载 .LC1 地址的高 20 位到 a5
+	flw	fa5,%lo(.LC1)(a5)			# 从 .LC1 加载单精度浮点数 2.0 到 fa5
+	fsw	fa5,-24(s0)				# 将 fa5 (2.0) 存储到栈位置 s0-24 (局部变量 f2)
+
+	# --- float fsum = f1 + f2; ---
+	flw	fa4,-20(s0)				# 从栈加载 f1 (3.14) 到浮点寄存器 fa4
+	flw	fa5,-24(s0)				# 从栈加载 f2 (2.0) 到浮点寄存器 fa5
+	fadd.s	fa5,fa4,fa5				# 单精度浮点加法：fa5 = fa4 + fa5 (3.14 + 2.0)
+	fsw	fa5,-28(s0)				# 将结果存储到栈位置 s0-28 (局部变量 fsum)
+
+	# --- float fdiff = f1 - f2; ---
+	flw	fa4,-20(s0)				# 重新加载 f1 (3.14) 到 fa4
+	flw	fa5,-24(s0)				# 重新加载 f2 (2.0) 到 fa5
+	fsub.s	fa5,fa4,fa5				# 单精度浮点减法：fa5 = fa4 - fa5 (3.14 - 2.0)
+	fsw	fa5,-32(s0)				# 将结果存储到栈位置 s0-32 (局部变量 fdiff)
+
+	# --- float fmul = f1 * f2; ---
+	flw	fa4,-20(s0)				# 重新加载 f1 (3.14) 到 fa4
+	flw	fa5,-24(s0)				# 重新加载 f2 (2.0) 到 fa5
+	fmul.s	fa5,fa4,fa5				# 单精度浮点乘法：fa5 = fa4 * fa5 (3.14 * 2.0)
+	fsw	fa5,-36(s0)				# 将结果存储到栈位置 s0-36 (局部变量 fmul)
+
+	# --- float fdiv = f1 / f2; ---
+	flw	fa4,-20(s0)				# 重新加载 f1 (3.14) 到 fa4
+	flw	fa5,-24(s0)				# 重新加载 f2 (2.0) 到 fa5
+	fdiv.s	fa5,fa4,fa5				# 单精度浮点除法：fa5 = fa4 / fa5 (3.14 / 2.0)
+	fsw	fa5,-40(s0)				# 将结果存储到栈位置 s0-40 (局部变量 fdiv)
+
+	# --- 输出 fsum ---
+	flw	fa0,-28(s0)				# 加载 fsum 到 fa0 (浮点函数参数寄存器)
+	call	putfloat				# 调用 putfloat 函数输出浮点数
+	li	a0,10					# 加载立即数 10 (换行符 '\n' 的 ASCII 码) 到 a0
+	call	putch					# 调用 putch 函数输出字符
+
+	# --- 输出 fdiff ---
+	flw	fa0,-32(s0)				# 加载 fdiff 到 fa0
+	call	putfloat				# 调用 putfloat 函数输出浮点数
+	li	a0,10					# 加载换行符到 a0
+	call	putch					# 调用 putch 函数输出换行符
+
+	# --- 输出 fmul ---
+	flw	fa0,-36(s0)				# 加载 fmul 到 fa0
+	call	putfloat				# 调用 putfloat 函数输出浮点数
+	li	a0,10					# 加载换行符到 a0
+	call	putch					# 调用 putch 函数输出换行符
+
+	# --- 输出 fdiv ---
+	flw	fa0,-40(s0)				# 加载 fdiv 到 fa0
+	call	putfloat				# 调用 putfloat 函数输出浮点数
+	li	a0,10					# 加载换行符到 a0
+	call	putch					# 调用 putch 函数输出换行符
+
+	# --- 函数尾声 (Epilogue) ---
+	li	a5,0					# 加载立即数 0 到 a5 (函数返回值)
+	mv	a0,a5					# 将返回值从 a5 移动到 a0 (函数返回值寄存器)
+	ld	ra,40(sp)				# 从栈恢复返回地址到 ra 寄存器
+	ld	s0,32(sp)				# 从栈恢复旧的帧指针到 s0 寄存器
+	addi	sp,sp,48				# 释放栈帧空间 (sp = sp + 48)
+	jr	ra					# 跳转到返回地址，函数结束
+
+	.size	main, .-main				# 声明 main 函数的大小
+
+# === 只读数据段 ===
+	.section	.rodata				# 切换到只读数据段
+	.align	2					# 数据按 4 字节对齐
+.LC0:							# 标签 .LC0
+	.word	1078523331				# 存储 32 位整数 1078523331 (3.14 的 IEEE 754 表示)
+	.align	2					# 数据按 4 字节对齐
+.LC1:							# 标签 .LC1
+	.word	1073741824				# 存储 32 位整数 1073741824 (2.0 的 IEEE 754 表示)
+
+# === 汇编器信息 ===
+	.ident	"GCC: (g1b306039ac4) 15.1.0"		# 编译器版本信息
+	.section	.note.GNU-stack,"",@progbits		# GNU 栈标记，表示不需要可执行栈
